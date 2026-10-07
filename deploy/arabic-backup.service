@@ -1,0 +1,8 @@
+[Unit]
+Description=Private Arabic learning state backup
+
+[Service]
+Type=oneshot
+User=root
+UMask=0077
+ExecStart=/opt/arabic/current/.venv/bin/python /opt/arabic/current/tools/backup_state.py --state /var/lib/arabic --destination /var/backups/arabic
