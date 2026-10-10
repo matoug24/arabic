@@ -202,7 +202,15 @@ def create_app(config=None):
         snapshot_assignment(db(),a);db().commit()
         return [json.loads(r['data']) for r in query('SELECT data FROM assignment_cards WHERE assignment_id=? ORDER BY position',(a['id'],)) if ready(word(json.loads(r['data'])['id']))]
     def public_card(w):
-        return {k:w.get(k,'') for k in ('id','english','meaning','arabic','category','topic','level','sentence')} | {'image':asset_url(w['image']) if w['image'] else url_for('static',filename='missing-picture.svg'),'audio':asset_url(w['audio']) if w['audio'] else '', 'sentence_audio':asset_url(w['sentence_audio']) if w.get('sentence_audio') else '', 'credit':w['image_creator']+' · '+w['image_license'],'credit_url':w['image_source']}
+        examples=[dict(id=e['id'],label=e['label'],audio=url_for('example_media',eid=e['id'])) for e in query('SELECT * FROM word_examples WHERE word_id=? ORDER BY created,id',(w['id'],)) if media_exists(e['audio'])]
+        return {k:w.get(k,'') for k in ('id','english','meaning','arabic','category','topic','level','sentence')} | {'image':asset_url(w['image']) if w['image'] else url_for('static',filename='missing-picture.svg'),'audio':asset_url(w['audio']) if w['audio'] else '', 'sentence_audio':asset_url(w['sentence_audio']) if w.get('sentence_audio') else '', 'examples':examples, 'credit':w['image_creator']+' · '+w['image_license'],'credit_url':w['image_source']}
+    @app.get('/example-media/<eid>')
+    @require()
+    def example_media(eid):
+        e=one('SELECT * FROM word_examples WHERE id=?',(eid,))
+        if not e:abort(404)
+        if not eligible(word(e['word_id'])):abort(403)
+        return send_from_directory(app.config['UPLOAD_DIR'],e['audio'].removeprefix('uploads/'))
     def owned_assignment(aid):
         a=one('SELECT * FROM assignments WHERE id=? AND user_id=?',(aid,g.user['id']))
         if not a: abort(404)
@@ -535,7 +543,7 @@ def create_app(config=None):
             except sqlite3.IntegrityError:
                 db().rollback(); flash('That English entry already exists. Keep the 2,000 entries distinct.','error')
             return redirect(url_for('edit_word',wid=wid))
-        return render_template('edit.html',w=w,payload={'cards':[public_card(w)],'source':'preview','position':0,'done':[]})
+        return render_template('edit.html',w=w,examples=query('SELECT * FROM word_examples WHERE word_id=? ORDER BY created,id',(wid,)),payload={'cards':[public_card(w)],'source':'preview','position':0,'done':[]})
     @app.get('/api/admin/move-preview')
     @require('parent')
     def move_preview():
@@ -559,19 +567,50 @@ def create_app(config=None):
             except (OSError,Image.DecompressionBombError): abort(400,'Use a valid PNG, JPEG or WebP image.')
             w['image_approved']=False
         else:
-            # Signature validation, not an extension trusted from the browser.
-            if data.startswith(b'\x1a\x45\xdf\xa3'): ext='.webm'
-            elif data.startswith(b'OggS'): ext='.ogg'
-            elif data.startswith(b'RIFF') and data[8:12]==b'WAVE': ext='.wav'
-            elif len(data)>12 and data[4:8]==b'ftyp': ext='.m4a'
-            elif data.startswith(b'ID3') or data[:2] in (b'\xff\xfb',b'\xff\xf3',b'\xff\xf2'): ext='.mp3'
-            else: abort(400,'Upload a real WebM, Ogg, WAV, M4A or MP3 recording.')
-            if len(data)<100: abort(400,'Recording is empty.')
-            filename=name+ext; (dest/filename).write_bytes(data)
+            path=save_audio(data);filename=path.removeprefix('uploads/')
         # Keep old recordings for backup/history; never overwrite them.
         w[kind]='uploads/'+filename; w['published']=False
         change('UPDATE words SET data=? WHERE id=?',(json.dumps(w,ensure_ascii=False),wid))
         return jsonify(ok=True,url=asset_url(w[kind]),message='Saved. Review the card and publish when ready.')
+    def save_audio(data):
+        # Signature validation is shared by pronunciation and optional examples.
+        if data.startswith(b'\x1a\x45\xdf\xa3'):ext='.webm'
+        elif data.startswith(b'OggS'):ext='.ogg'
+        elif data.startswith(b'RIFF') and data[8:12]==b'WAVE':ext='.wav'
+        elif len(data)>12 and data[4:8]==b'ftyp':ext='.m4a'
+        elif data.startswith(b'ID3') or data[:2] in (b'\xff\xfb',b'\xff\xf3',b'\xff\xf2'):ext='.mp3'
+        else:abort(400,'Upload a real WebM, Ogg, WAV, M4A or MP3 recording.')
+        if len(data)<100:abort(400,'Recording is empty.')
+        filename=uuid.uuid4().hex+ext;path=Path(app.config['UPLOAD_DIR'])/filename
+        path.write_bytes(data);path.chmod(0o600)
+        return 'uploads/'+filename
+    @app.post('/admin/word/<int:wid>/examples')
+    @app.post('/admin/word/<int:wid>/examples/<eid>')
+    @require('parent')
+    def edit_example(wid,eid=None):
+        word(wid)
+        existing=one('SELECT * FROM word_examples WHERE id=? AND word_id=?',(eid,wid)) if eid else None
+        if eid and not existing:abort(404)
+        action=request.form.get('action','save')
+        if action not in ('save','delete'):abort(400)
+        if action=='delete':
+            if not existing:abort(404)
+            change('DELETE FROM word_examples WHERE id=?',(eid,))
+            # Retain original media privately for backups, as with replaced pronunciation.
+            flash('Example removed.','success')
+            return redirect(url_for('edit_word',wid=wid))
+        f=request.files.get('file')
+        if not existing and not f:abort(400,'Record or upload an example first.')
+        label=request.form.get('label',existing['label'] if existing else '').strip()
+        if len(label)>160:abort(400,'Use a label of at most 160 characters.')
+        audio=save_audio(f.read()) if f else existing['audio']
+        if existing:change('UPDATE word_examples SET label=?,audio=?,updated=? WHERE id=?',(label,audio,stamp(),eid))
+        else:
+            eid=uuid.uuid4().hex
+            change('INSERT INTO word_examples VALUES(?,?,?,?,?,?)',(eid,wid,label,audio,stamp(),stamp()))
+        if f:return jsonify(ok=True,id=eid,url=url_for('example_media',eid=eid))
+        flash('Example label saved.','success')
+        return redirect(url_for('edit_word',wid=wid))
     @app.route('/admin/children',methods=['GET','POST'])
     @require('parent')
     def children():
@@ -665,7 +704,7 @@ def create_app(config=None):
     @app.errorhandler(413)
     @app.errorhandler(429)
     def error(e):
-        if request.path.startswith('/api/') or '/upload/' in request.path: return jsonify(error=e.description),e.code
+        if request.path.startswith('/api/') or '/upload/' in request.path or (request.endpoint=='edit_example' and request.headers.get('X-CSRF-Token')): return jsonify(error=e.description),e.code
         return render_template('error.html',error=e),e.code
     app.helpers=dict(db=db,word=word,ready=ready,analytics=analytics)
     return app

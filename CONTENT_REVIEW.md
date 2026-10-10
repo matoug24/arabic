@@ -11,3 +11,5 @@ Parent preview includes drafts across all levels without changing child progress
 Parents can move words after learning begins. A move swaps destination positions, keeping 200 entries per level. Previously issued homework and quiz snapshots remain unchanged. Future assignments follow a rebalanced per-child plan that avoids assigning the same entry twice.
 
 ARASAAC assets require attribution, noncommercial use and share-alike. Commons photographs carry their individual licenses. Original diagrams and adapted curriculum data use CC BY-SA 4.0. Keep attribution when backing up or distributing lesson materials.
+
+Parents can add multiple optional spoken examples per word, with optional labels. Children may listen without completing anything. Examples are excluded from quizzes, scoring, publication readiness and homework requirements. Use the separate pronunciation recorder for the quiz word itself.

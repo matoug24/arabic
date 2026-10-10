@@ -3,3 +3,5 @@
 
 .heading-actions{display:flex;flex-direction:column;gap:10px;min-width:200px}.letter-help{text-align:left;font-size:13px;margin:10px 0 20px;padding:12px;border:1px solid var(--line);border-radius:8px}.letter-help p{margin-bottom:5px}
 .spelling-inline{font-size:26px;unicode-bidi:plaintext}.spelling-inline .wrong,.spelling-inline .extra{color:#c32a27;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:5px}.spelling-inline .missing{color:#c32a27;text-decoration:underline dotted;text-underline-offset:5px}
+
+.word-examples{margin:1rem 0;padding:.8rem;border:1px solid var(--line,#ddd);border-radius:12px}.word-examples summary{cursor:pointer;font-weight:600}.word-examples audio,.example-editor audio{width:100%;max-width:100%}.example-editor{padding:1rem 0;border-top:1px solid var(--line,#ddd)}.example-editor summary{cursor:pointer;margin-bottom:.8rem}

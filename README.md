@@ -14,6 +14,12 @@ In Content, review the meaning, grammar, picture and source/license; enter appro
 
 Moving a word swaps the destination position, keeping 200 entries per level even after learning begins. The editor previews the destination. Issued homework, quiz answers and activity retain their original snapshots. Future assignments follow a rebalanced per-child plan without duplicate entries.
 
+## Optional spoken examples
+
+Each word has a separate Optional spoken examples section. Record or upload multiple examples, listen before saving, record replacements, edit optional labels or remove examples. No written sentence is required. Examples appear in a collapsed optional section on child word cards, homework, reviews, exploration and parent previews. They never enter quizzes, scoring, homework-completion or publication requirements. Required word pronunciation remains the quiz audio. Example playback is not counted as a pronunciation start/completion; visible engagement may still contribute to estimated active time.
+
+Examples are stored in the private database/media directory and included in private exports and server backups. They follow the current word even for issued homework, without changing assignment or quiz snapshots. Removing an example removes its child playback route; old media files remain private in storage/backups, following the existing replaced-recording policy. Earlier single sentence recordings remain available and are also excluded from pronunciation counters.
+
 ## Learning and analytics
 
 - Homework contains twenty entries, saves position/practice incrementally, and never skips content after missed days. The next assignment opens on the next local day after completion. Ten assignments make a level.

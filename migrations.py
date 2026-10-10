@@ -38,6 +38,8 @@ def migrate(db,catalog):
     CREATE TABLE IF NOT EXISTS placement_history(id INTEGER PRIMARY KEY,parent_id INTEGER,word_id INTEGER,other_id INTEGER,old_level INTEGER,old_position INTEGER,new_level INTEGER,new_position INTEGER,created TEXT);
     CREATE TABLE IF NOT EXISTS exploration_batches(id TEXT PRIMARY KEY,user_id INTEGER REFERENCES users(id),category TEXT,topic TEXT,words TEXT,created TEXT,preview INTEGER DEFAULT 0);
     CREATE TABLE IF NOT EXISTS topic_practice(user_id INTEGER REFERENCES users(id),word_id INTEGER REFERENCES words(id),completed TEXT,PRIMARY KEY(user_id,word_id));
+    CREATE TABLE IF NOT EXISTS word_examples(id TEXT PRIMARY KEY,word_id INTEGER NOT NULL REFERENCES words(id),label TEXT NOT NULL DEFAULT '',audio TEXT NOT NULL,created TEXT NOT NULL,updated TEXT NOT NULL);
+    CREATE INDEX IF NOT EXISTS examples_by_word ON word_examples(word_id,created,id);
     ''')
     version=db.execute("SELECT value FROM schema_meta WHERE key='taxonomy'").fetchone()
     if not version:
@@ -57,5 +59,5 @@ def migrate(db,catalog):
     for a in db.execute('SELECT * FROM assignments').fetchall():snapshot_assignment(db,a)
     for u in db.execute("SELECT id FROM users WHERE role='child'").fetchall():
         if not db.execute('SELECT 1 FROM child_plan WHERE user_id=?',(u['id'],)).fetchone():rebuild_plan(db,u['id'])
-    db.execute("INSERT INTO schema_meta VALUES('version','2') ON CONFLICT(key) DO UPDATE SET value=excluded.value")
+    db.execute("INSERT INTO schema_meta VALUES('version','3') ON CONFLICT(key) DO UPDATE SET value=excluded.value")
     db.commit()

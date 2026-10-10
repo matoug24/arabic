@@ -1,0 +1,31 @@
+<section class="panel asset-panel" aria-label="Optional spoken examples">
+  <h2>Optional spoken examples</h2>
+  <p>Record different ways you use this word. Children can listen for interest; examples are never used in quizzes and do not affect publication or homework.</p>
+  <p class="muted">Labels are optional. Save word edits before adding recordings.</p>
+  {% for example in examples %}
+  <details class="example-editor recorder" data-upload="{{ url_for('edit_example',wid=w.id,eid=example.id) }}" data-example="true">
+    <summary>{{ example.label or 'Example ' ~ loop.index }}</summary>
+    <audio controls preload="none" src="{{ url_for('example_media',eid=example.id) }}"></audio>
+    <form method="post" action="{{ url_for('edit_example',wid=w.id,eid=example.id) }}">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <label>Example label (optional)<input class="example-label" name="label" maxlength="160" value="{{ example.label }}" dir="auto"></label>
+      <button type="submit" class="secondary">Save label</button>
+      <button type="submit" class="link-button" name="action" value="delete">Remove example</button>
+    </form>
+    <div class="record-buttons"><button type="button" class="primary record-start">● Record replacement</button><button type="button" class="secondary record-stop" disabled>Stop</button></div>
+    <p class="record-status" role="status">Preview a replacement before saving it.</p>
+    <audio class="record-preview" controls hidden></audio>
+    <button type="button" class="primary record-save" hidden>Save replacement</button>
+    <label>Upload replacement<input type="file" accept="audio/*" data-upload="{{ url_for('edit_example',wid=w.id,eid=example.id) }}"></label>
+  </details>
+  {% endfor %}
+  <div class="example-editor recorder" data-upload="{{ url_for('edit_example',wid=w.id) }}" data-example="true">
+    <h3>Add an example</h3>
+    <label>Example label (optional)<input class="example-label" maxlength="160" dir="auto" placeholder="For example: at breakfast"></label>
+    <div class="record-buttons"><button type="button" class="primary record-start">● Record example</button><button type="button" class="secondary record-stop" disabled>Stop</button></div>
+    <p class="record-status" role="status">Microphone works on localhost or HTTPS.</p>
+    <audio class="record-preview" controls hidden></audio>
+    <button type="button" class="primary record-save" hidden>Save example</button>
+    <label>Or upload an example<input type="file" accept="audio/*" data-upload="{{ url_for('edit_example',wid=w.id) }}"></label>
+  </div>
+</section>
