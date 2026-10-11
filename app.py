@@ -514,8 +514,14 @@ def create_app(config=None):
         if request.method=='POST':
             old=w.copy()
             for key in ('english','meaning','arabic','category','topic','pos','sentence','image_source','image_creator','image_license','content_note'): w[key]=request.form.get(key,w.get(key,''))[:4000].strip()
-            w['variants']=[s.strip() for s in request.form.get('variants','').splitlines() if s.strip()]
-            w['forms']=[s.strip() for s in request.form.get('forms','').splitlines() if s.strip()]
+            if 'spellings' in request.form:
+                spellings=list(dict.fromkeys(s.strip() for s in request.form['spellings'].splitlines() if s.strip()))
+                w['arabic']=spellings[0] if spellings else ''
+                w['variants']=spellings[1:]
+            elif 'variants' in request.form:
+                w['variants']=[s.strip() for s in request.form['variants'].splitlines() if s.strip()]
+            if 'forms' in request.form:
+                w['forms']=[s.strip() for s in request.form['forms'].splitlines() if s.strip()]
             w['arabic_approved']='arabic_approved' in request.form
             w['image_approved']='image_approved' in request.form
             w['published']='published' in request.form

@@ -387,7 +387,7 @@ This creates a backup, activates that code, and preserves current state. The com
 | HTTPS 502 | Check `systemctl status arabic`, journal and internal 8050 health; validate Nginx. Do not open 8050 publicly. |
 | Setup 403 | Production requires HTTPS and the one-time server token. Existing accounts disable setup. Check `ARABIC_PRODUCTION`, proxy headers and `/etc/arabic/app.env`. |
 | Login loop or lost session after restore | Confirm HTTPS, secure cookies, domain and secret file ownership. Clearing old cookies or signing in again may be needed after a new secret. |
-| Microphone unavailable | Use HTTPS/localhost, grant site microphone permission, check browser/device input; upload audio if the device cannot record. |
+| Microphone unavailable | Use HTTPS/localhost, grant site microphone permission, and check browser/device input or try another recording-capable device. |
 | Upload 413 | App/Nginx limit is 12 MB including multipart overhead. Use a shorter/smaller recording. |
 | Homework unavailable | Every one of its twenty snapshot/plan cards must be published with approved Arabic/image and saved audio. Prepare the next batch in Content. |
 | Disk full / backups fail | Check recordings/backups sizes and free space, copy backups offsite, retain known-good archives before deleting older copies. |
@@ -401,6 +401,6 @@ Application integration tests cover separate accounts, random all-level categori
 
 ## 25. Optional example recordings
 
-The parent word editor supports multiple spoken examples alongside the required word pronunciation. Record or upload examples, preview/replace recordings, edit optional labels and remove examples. HTTPS is required for microphone access online. Empty examples are valid; they never enter quizzes or publication/homework requirements.
+The parent word editor supports multiple spoken examples alongside the required word pronunciation. Use Record example inside Your pronunciation, preview before saving, play saved examples and remove examples. Audio uploads and example label fields are absent from this editor. HTTPS is required for microphone access online. Empty examples are valid; they never enter quizzes or publication/homework requirements. The former single sentence recorder is also absent; previously saved sentence recordings remain available to children.
 
 Update an existing server with `sudo install-arabic`. The additive version-3 migration creates a separate example table without replacing accounts, progress, issued snapshots or existing media. Example metadata resides in `/var/lib/arabic/learning.sqlite3`; audio resides in `/var/lib/arabic/media`. Both private web exports and server backups include examples, so the existing restore procedure applies. Keep family recordings out of GitHub. Removed/replaced recordings remain archived privately like replaced pronunciation recordings; children cannot access removed example routes.
